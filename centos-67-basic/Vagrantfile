@@ -1,0 +1,15 @@
+# Centos 6 Vagrant VM
+# Inline shell provisioning
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "bento/centos-6.7"
+  config.vm.provision "shell", inline: "echo 'Inline shell provisioning complete'"
+  # Private Network
+  # Makes the VM only accessible from your machine
+  # Static IP
+  config.vm.network "private_network", ip: "10.0.0.11"
+  # IPv6
+  # config.vm.network "private_network", ip: "fde4:8dba:82e1::c4"
+  # DHCP
+  # config.vm.network "private_network", type: "dhcp"
+end
