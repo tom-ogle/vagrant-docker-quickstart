@@ -1,0 +1,7 @@
+node1:
+  build: ./app
+  links:
+    - redis
+
+redis:
+  image: redis

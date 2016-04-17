@@ -1,0 +1,71 @@
+# Centos 7 Vagrant VM
+# Runs docker-compose
+# Provisioned using vagrant-docker-compose plugin, install using:
+# vagrant plugin install vagrant-docker-compose
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "centos/7"
+
+  if not Vagrant.has_plugin? 'vagrant-docker-compose'
+    raise Vagrant::Errors::VagrantError.new,
+          "vagrant-docker-compose plugin is missing, please install the plugin:\n" +
+          "vagrant plugin install vagrant-docker-compose"
+  end
+
+  config.vm.hostname = "centos7dockercompose"
+  config.vm.post_up_message = "Centos 7 docker compose box started."
+
+  # Forward localhost:8080 to access the guest VM's port 80
+  config.vm.network "forwarded_port", guest: 80, host: 8080, protocol: 'tcp'
+
+  # Create a private network, which allows host-only access to the machine
+  # using a specific IP.
+  # config.vm.network "private_network", ip: "192.168.33.10"
+
+  # Create a public network, which generally matched to bridged network.
+  # Bridged networks make the machine appear as another physical device on
+  # your network.
+  # config.vm.network "public_network"
+
+  # Synced Directories
+  # See https://www.vagrantup.com/docs/synced-folders/basic_usage.html for more
+  # Consider NFS if shared directory performance is bad
+  # Map target directory in your project to /opt/app on the guest VM
+  config.vm.synced_folder "target/", "/opt/app", create: true
+
+  config.vm.provider "virtualbox" do |vb|
+    # Customize the amount of memory on the VM:
+    # (Credit to https://dzone.com/articles/virtualization-of-development-process-with-docker)
+    hostOS = RbConfig::CONFIG['host_os']
+    if hostOS =~ /linux/
+      cpus = `nproc`.to_i
+      mem = `grep 'MemTotal' /proc/meminfo | sed -e 's/MemTotal://' -e 's/ kB//'`.to_i / 1024 / 4
+    elsif hostOS =~ /darwin/
+      cpus = `sysctl -n hw.ncpu`.to_i
+      mem = `sysctl -n hw.memsize`.to_i / 1024 / 1024 / 4
+    else
+      cpus = 2
+      mem = 1024
+    end
+    vb.customize ["modifyvm", :id, "--memory", mem]
+    vb.customize ["modifyvm", :id, "--cpus", cpus]
+
+
+
+
+    vb.memory = "2048"
+    vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50", "--cpus", "1"]
+  end
+
+  # Provisioners
+  config.vm.provision "Update packages",
+                      type: "shell",
+                      run: "always",
+                      privileged: true,
+                      inline: "yum update -y"
+
+  config.vm.provision :docker
+  config.vm.provision :docker_compose,
+                      yml: "/vagrant/scripts/docker-compose.yml",
+                      run: "always"
+end
