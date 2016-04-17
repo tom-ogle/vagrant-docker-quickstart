@@ -1,0 +1,51 @@
+# Centos 7 Vagrant VM
+# Syncs target/ directory to /opt/app
+# Provisioned from shell script scripts/bootstrap.sh
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "centos/7"
+  config.vm.hostname = "centos7nginx"
+  config.vm.post_up_message = "Centos 7 nginx box started."
+
+  # Forward localhost:8080 to access the guest VM's port 80
+  config.vm.network "forwarded_port", guest: 80, host: 8080, protocol: 'tcp'
+
+  # Create a private network, which allows host-only access to the machine
+  # using a specific IP.
+  # config.vm.network "private_network", ip: "192.168.33.10"
+
+  # Create a public network, which generally matched to bridged network.
+  # Bridged networks make the machine appear as another physical device on
+  # your network.
+  # config.vm.network "public_network"
+
+  # Synced Directories
+  # See https://www.vagrantup.com/docs/synced-folders/basic_usage.html for more
+  # Consider NFS if shared directory performance is bad
+  # Map target directory in your project to /opt/app on the guest VM
+  config.vm.synced_folder "target/", "/opt/app", create: true
+
+  config.vm.provider "virtualbox" do |vb|
+    # Customize the amount of memory on the VM:
+    vb.memory = "2048"
+    vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50", "--cpus", "1"]
+  end
+
+  # Provisioners
+  config.vm.provision "Update packages",
+                      type: "shell",
+                      run: "always",
+                      privileged: true,
+                      inline: "yum update -y"
+
+  config.vm.provision "Bootstrap shell script", type: "shell" do |s|
+    s.privileged = true
+    s.path = "scripts/bootstrap.sh"
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+    # Customize the amount of memory on the VM:
+    vb.memory = "2048"
+    vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50", "--cpus", "1"]
+  end
+end
