@@ -49,7 +49,7 @@ If you get an error message similar to "Failed to mount folders in Linux guest" 
 
 ## Useful docker images 
 
-`docker pull <imagename>
+Use `docker pull <imagename>`
 
 * centos:7
 * centos:6
