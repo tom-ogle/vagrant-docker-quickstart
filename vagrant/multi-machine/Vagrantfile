@@ -1,0 +1,26 @@
+# Multi machine Centos 7 Vagrant VMs
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "centos/7"
+
+  # Provisioners
+  config.vm.provision "Update packages",
+                      type: "shell",
+                      run: "always",
+                      privileged: true,
+                      inline: "yum update -y"
+
+  config.vm.define "node1", primary: true do |n1|
+    n1.vm.post_up_message = "Node1 started."
+    n1.vm.hostname = "node1"
+    n1.vm.network "forwarded_port", guest: 80, host: 8081, protocol: 'tcp'
+    n1.vm.network "private_network", ip: "192.168.33.10"
+    n1.vm.network "private_network", ip: "10.0.0.10"
+  end
+
+  config.vm.define "node2" do |n2|
+    n2.vm.post_up_message = "Node2 started."
+    n2.vm.hostname = "node2"
+    n2.vm.network "private_network", ip: "10.0.0.11"
+  end
+end
